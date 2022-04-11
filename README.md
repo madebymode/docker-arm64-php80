@@ -4,8 +4,8 @@ docker-compose.yml
 ```yaml
   php8:
     platform: linux/arm64/v8
-    image: madebymode/php74-arm64-alpine
-    build: github.com/madebymode/docker-arm64-php74.git
+    image: madebymode/php8-arm64-alpine
+    build: github.com/madebymode/docker-arm64-php80.git
     ports:
       - "9000:9000"
     volumes:

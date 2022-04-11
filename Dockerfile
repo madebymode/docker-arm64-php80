@@ -1,41 +1,66 @@
-FROM centos:7
-MAINTAINER madebymode
+FROM php:8.0-fpm-alpine3.14
 
-RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-RUN rpm -Uvh https://repo.ius.io/ius-release-el7.rpm
-#php71u is archived
-RUN yum-config-manager --enable ius-archive
+# Add Repositories
+RUN rm -f /etc/apk/repositories &&\
+    echo "http://dl-cdn.alpinelinux.org/alpine/v3.14/main" >> /etc/apk/repositories && \
+    echo "http://dl-cdn.alpinelinux.org/alpine/v3.14/community" >> /etc/apk/repositories
 
-# Update and install latest packages and prerequisites
-RUN yum update -y \
-    && yum install -y --nogpgcheck --setopt=tsflags=nodocs \
-        php71u-cli \
-        php71u-common \
-        php71u-fpm \
-        php71u-gd \
-        php71u-mbstring \
-        php71u-mysqlnd \
-        php71u-xml \
-        php71u-json \
-        php71u-intl \
-        php71u-mcrypt \
-        php71u-bcmath \
-        zip \
-        unzip \
-        sendmail \
-    && yum clean all && yum history new
-    
+# Add Build Dependencies
+RUN apk add --no-cache --virtual .build-deps  \
+    zlib-dev \
+    libjpeg-turbo-dev \
+    libpng-dev \
+    libxml2-dev \
+    bzip2-dev \
+    zip
+
+# Add App Dependencies
+RUN apk add --update --no-cache \
+    jpegoptim \
+    pngquant \
+    optipng \
+    vim \
+    icu-dev \
+    freetype-dev \
+    mysql-client \
+    libzip-dev \
+    bash \
+    shared-mime-info \ 
+    git \
+    curl \
+    wget
+
+# Configure & Install Extension
+RUN docker-php-ext-configure gd --with-jpeg=/usr/include/ --with-freetype=/usr/include/ && \
+
+    docker-php-ext-install \
+    mysqli \
+    pdo \
+    pdo_mysql \
+    sockets \
+    json \
+    intl \
+    gd \
+    xml \
+    bz2 \
+    pcntl \
+    bcmath \
+    zip \
+    fileinfo
+
+
+RUN ln -sf "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/conf.d/php.ini"
+
 #composer 1.10
 RUN curl -sS https://getcomposer.org/installer | php -- --version=1.10.22 --install-dir=/usr/local/bin --filename=composer
 #composer 2
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer2
+ENV COMPOSER_ALLOW_SUPERUSER=1
+ENV PATH="./vendor/bin:$PATH"
 
-RUN sed -e 's/127.0.0.1:9000/9000/' \
-        -e '/allowed_clients/d' \
-        -e '/catch_workers_output/s/^;//' \
-        -e '/error_log/d' \
-        -i /etc/php-fpm.d/www.conf
+RUN apk update
 
-CMD ["php-fpm", "-F"]
-
-EXPOSE 9000
+# Remove Build Dependencies
+RUN apk del -f .build-deps
+# Setup Working Dir
+WORKDIR /app

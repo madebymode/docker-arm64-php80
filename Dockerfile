@@ -38,7 +38,6 @@ RUN docker-php-ext-configure gd --with-jpeg=/usr/include/ --with-freetype=/usr/i
     bz2 \
     gd \
     intl \
-    json \
     mysqli \
     pcntl \
     pdo_mysql \

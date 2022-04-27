@@ -34,19 +34,16 @@ RUN apk add --update --no-cache \
 RUN docker-php-ext-configure gd --with-jpeg=/usr/include/ --with-freetype=/usr/include/ && \
 
     docker-php-ext-install \
+    bcmath \
+    bz2 \
+    gd \
+    intl \
+    json \
     mysqli \
-    pdo \
+    pcntl \
     pdo_mysql \
     sockets \
-    json \
-    intl \
-    gd \
-    xml \
-    bz2 \
-    pcntl \
-    bcmath \
-    zip \
-    fileinfo
+    zip 
 
 
 RUN ln -sf "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/conf.d/php.ini"
